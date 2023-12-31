@@ -15,7 +15,7 @@ func main() {
 	fmt.Println("Counting...")
 
 	for i := 0; i < 10; i++ {
-		process.Sleep(200)
+		process.SleepMS(200)
 		fmt.Println(i)
 	}
 
