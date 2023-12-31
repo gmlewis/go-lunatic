@@ -1,6 +1,7 @@
+// -*- compile-command: "GOOS=wasip1 GOARCH=wasm go test ./..."; -*-
+
 // Package networking provides the Go bindings to the lunatic::networking API.
 package networking
-
 
 // Resolve
 //

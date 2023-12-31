@@ -1,6 +1,7 @@
+// -*- compile-command: "GOOS=wasip1 GOARCH=wasm go test ./..."; -*-
+
 // Package timer provides the Go bindings to the lunatic::timer API.
 package timer
-
 
 // SendAfter
 //

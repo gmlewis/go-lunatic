@@ -1,6 +1,7 @@
+// -*- compile-command: "GOOS=wasip1 GOARCH=wasm go test ./..."; -*-
+
 // Package metrics provides the Go bindings to the lunatic::metrics API.
 package metrics
-
 
 // Counter
 //

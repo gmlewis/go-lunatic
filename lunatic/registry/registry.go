@@ -1,6 +1,7 @@
+// -*- compile-command: "GOOS=wasip1 GOARCH=wasm go test ./..."; -*-
+
 // Package registry provides the Go bindings to the lunatic::registry API.
 package registry
-
 
 // Put
 //

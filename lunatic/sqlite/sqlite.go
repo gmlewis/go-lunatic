@@ -1,6 +1,7 @@
+// -*- compile-command: "GOOS=wasip1 GOARCH=wasm go test ./..."; -*-
+
 // Package sqlite provides the Go bindings to the lunatic::sqlite API.
 package sqlite
-
 
 // Open
 //

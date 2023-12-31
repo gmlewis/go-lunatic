@@ -1,6 +1,7 @@
+// -*- compile-command: "GOOS=wasip1 GOARCH=wasm go test ./..."; -*-
+
 // Package wasi provides the Go bindings to the lunatic::wasi API.
 package wasi
-
 
 // ConfigAddEnvironmentVariable
 //

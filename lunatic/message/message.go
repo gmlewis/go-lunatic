@@ -1,6 +1,7 @@
+// -*- compile-command: "GOOS=wasip1 GOARCH=wasm go test ./..."; -*-
+
 // Package message provides the Go bindings to the lunatic::message API.
 package message
-
 
 // CreateData
 //
