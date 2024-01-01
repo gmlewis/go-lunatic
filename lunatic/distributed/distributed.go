@@ -19,7 +19,10 @@ var (
 	ProcessDoesNotExist = errors.New("process does not exist")
 )
 
+type ptr = unsafe.Pointer
 type size = uint32
+
+func mkptr[T any](v *T) ptr { return unsafe.Pointer(v) }
 
 // NodesCount returns the number of registered nodes.
 //
@@ -29,7 +32,7 @@ func NodesCount() uint32
 
 //go:wasmimport lunatic::distributed get_nodes
 //go:noescape
-func get_nodes(buf unsafe.Pointer, bufLen size) uint32
+func get_nodes(buf ptr, bufLen size) uint32
 
 // GetNodes copies node IDs into the `ids` slice which must have
 // enough capacity to hold the results.
@@ -45,7 +48,7 @@ func GetNodes(ids []uint64) (err error) {
 		}
 	}()
 
-	n = get_nodes(unsafe.Pointer(&ids[0]), size(uintptr(len(ids))*unsafe.Sizeof(uint64(0))))
+	n = get_nodes(mkptr(&ids[0]), size(uintptr(len(ids))*unsafe.Sizeof(uint64(0))))
 	sh := (*reflect.SliceHeader)(unsafe.Pointer(&ids))
 	sh.Len = int(n) // override the slice's length to the returned results.
 	return nil
@@ -66,7 +69,7 @@ func ModuleID() uint64
 //go:wasmimport lunatic::distributed spawn
 //go:noescape
 func spawn(nodeID uint64, configID int64, moduleID uint64,
-	funcStrPtr unsafe.Pointer, funcStrLen size, paramsPtr unsafe.Pointer, paramsLen size, idPtr unsafe.Pointer) uint32
+	funcStrPtr ptr, funcStrLen size, paramsPtr ptr, paramsLen size, idPtr ptr) uint32
 
 // Spawn spawns a new process using the passed-in function inside a module
 // as the entry point. The process is spawned on a node with ID `nodeID`.
@@ -141,8 +144,8 @@ func Spawn(nodeID uint64, configID int64, moduleID uint64, funcStr string, param
 		}
 	}
 
-	errno := spawn(nodeID, configID, moduleID, unsafe.Pointer(&funcStr), size(len(funcStr)),
-		unsafe.Pointer(&paramsBytes[0]), size(len(paramsBytes)), unsafe.Pointer(&id))
+	errno := spawn(nodeID, configID, moduleID, mkptr(&funcStr), size(len(funcStr)),
+		mkptr(&paramsBytes[0]), size(len(paramsBytes)), mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil

@@ -10,19 +10,20 @@ import (
 )
 
 var (
-	// CallTimedOut        = errors.New("call timed out")
 	ModuleDoesNotExist  = errors.New("module does not exist")
 	NodeConnectionError = errors.New("node connection error")
 	NodeDoesNotExist    = errors.New("node does not exist")
 	PermissionDenied    = errors.New("permission denied")
-	// ProcessDoesNotExist = errors.New("process does not exist")
 )
 
+type ptr = unsafe.Pointer
 type size = uint32
+
+func mkptr[T any](v *T) ptr { return unsafe.Pointer(v) }
 
 //go:wasmimport lunatic::process compile_module
 //go:noescape
-func compile_module(moduleDataPtr unsafe.Pointer, moduleDataLen size, idPtr unsafe.Pointer) int32
+func compile_module(moduleDataPtr ptr, moduleDataLen size, idPtr ptr) int32
 
 // CompileModule compiles a new WebAssembly module.
 //
@@ -34,7 +35,7 @@ func compile_module(moduleDataPtr unsafe.Pointer, moduleDataLen size, idPtr unsa
 // * PermissionDenied if the process doesn't have permission to compile modules.
 // * a wrapped wrror ID
 func CompileModule(moduleData string) (id uint32, err error) {
-	errno := compile_module(unsafe.Pointer(&moduleData), size(len(moduleData)), unsafe.Pointer(&id))
+	errno := compile_module(mkptr(&moduleData), size(len(moduleData)), mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil
@@ -319,8 +320,8 @@ func ConfigSetCanSpawnProcesses(configID uint64, ok bool) (err error) {
 
 //go:wasmimport lunatic::process spawn
 //go:noescape
-func spawn(link, configID, moduleID int64, funcStrPtr unsafe.Pointer, funcStrLen size,
-	paramsPtr unsafe.Pointer, paramsLen size, idPtr unsafe.Pointer) uint32
+func spawn(link, configID, moduleID int64, funcStrPtr ptr, funcStrLen size,
+	paramsPtr ptr, paramsLen size, idPtr ptr) uint32
 
 // SpawnFunc is a helper to spawn a new function in Go.
 func SpawnFunc(fn func()) (id uint32, err error) {
@@ -410,8 +411,8 @@ func Spawn(link, configID, moduleID int64, funcStr string, params []any) (id uin
 		}
 	}
 
-	errno := spawn(link, configID, moduleID, unsafe.Pointer(&funcStr), size(len(funcStr)),
-		unsafe.Pointer(&paramsBytes[0]), size(len(paramsBytes)), unsafe.Pointer(&id))
+	errno := spawn(link, configID, moduleID, mkptr(&funcStr), size(len(funcStr)),
+		mkptr(&paramsBytes[0]), size(len(paramsBytes)), mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil

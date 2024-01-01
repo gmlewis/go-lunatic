@@ -8,11 +8,14 @@ import (
 	"unsafe"
 )
 
+type ptr = unsafe.Pointer
 type size = uint32
+
+func mkptr[T any](v *T) ptr { return unsafe.Pointer(v) }
 
 //go:wasmimport lunatic::registry put
 //go:noescape
-func put(nameStrPtr unsafe.Pointer, nameStrLen size, nodeID, processID uint64)
+func put(nameStrPtr ptr, nameStrLen size, nodeID, processID uint64)
 
 // Put registers process with `processID` under `name`.
 func Put(name string, nodeID, processID uint64) (err error) {
@@ -22,13 +25,13 @@ func Put(name string, nodeID, processID uint64) (err error) {
 		}
 	}()
 
-	put(unsafe.Pointer(&name), size(len(name)), nodeID, processID)
+	put(mkptr(&name), size(len(name)), nodeID, processID)
 	return nil
 }
 
 //go:wasmimport lunatic::registry get
 //go:noescape
-func get(nameStrPtr unsafe.Pointer, nameStrLen size, nodeID, processID uint64) uint32
+func get(nameStrPtr ptr, nameStrLen size, nodeID, processID uint64) uint32
 
 // Get looks up process under `name` and returns if it was found.
 func Get(name string, nodeID, processID uint64) (ok bool, err error) {
@@ -38,13 +41,13 @@ func Get(name string, nodeID, processID uint64) (ok bool, err error) {
 		}
 	}()
 
-	n := get(unsafe.Pointer(&name), size(len(name)), nodeID, processID)
+	n := get(mkptr(&name), size(len(name)), nodeID, processID)
 	return n == 0, nil
 }
 
 //go:wasmimport lunatic::registry remove
 //go:noescape
-func remove(nameStrPtr unsafe.Pointer, nameStrLen size)
+func remove(nameStrPtr ptr, nameStrLen size)
 
 // Remove removes the process under `name` if it exists.
 func Remove(name string) (err error) {
@@ -54,6 +57,6 @@ func Remove(name string) (err error) {
 		}
 	}()
 
-	remove(unsafe.Pointer(&name), size(len(name)))
+	remove(mkptr(&name), size(len(name)))
 	return nil
 }

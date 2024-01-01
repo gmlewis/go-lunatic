@@ -9,11 +9,14 @@ import (
 	"unsafe"
 )
 
+type ptr = unsafe.Pointer
 type size = uint32
+
+func mkptr[T any](v *T) ptr { return unsafe.Pointer(v) }
 
 //go:wasmimport lunatic::sqlite open
 //go:noescape
-func open(pathStrPtr unsafe.Pointer, pathStrLen size, connectionIDPtr unsafe.Pointer) uint64
+func open(pathStrPtr ptr, pathStrLen size, connectionIDPtr ptr) uint64
 
 // Open opens a sqlite connection.
 func Open(path string) (connectionID uint64, err error) {
@@ -23,7 +26,7 @@ func Open(path string) (connectionID uint64, err error) {
 		}
 	}()
 
-	errno := open(unsafe.Pointer(&path), size(len(path)), unsafe.Pointer(&connectionID))
+	errno := open(mkptr(&path), size(len(path)), mkptr(&connectionID))
 	switch errno {
 	case 0:
 		return connectionID, nil
@@ -36,7 +39,7 @@ func Open(path string) (connectionID uint64, err error) {
 
 //go:wasmimport lunatic::sqlite execute
 //go:noescape
-func execute(connID uint64, execStrPtr unsafe.Pointer, execStrLen size) uint32
+func execute(connID uint64, execStrPtr ptr, execStrLen size) uint32
 
 // Execute executes a sqlite query.
 func Execute(connID uint64, exec string) (err error) {
@@ -46,7 +49,7 @@ func Execute(connID uint64, exec string) (err error) {
 		}
 	}()
 
-	errno := execute(connID, unsafe.Pointer(&exec), size(len(exec)))
+	errno := execute(connID, mkptr(&exec), size(len(exec)))
 	switch errno {
 	case 0:
 		return nil
@@ -59,7 +62,7 @@ func Execute(connID uint64, exec string) (err error) {
 
 //go:wasmimport lunatic::sqlite bind_value
 //go:noescape
-func bind_value(statementID uint64, bindDataPtr unsafe.Pointer, bindDataLen size)
+func bind_value(statementID uint64, bindDataPtr ptr, bindDataLen size)
 
 // BindValue binds a value.
 func BindValue(statementID uint64, bindData []byte) (err error) {
@@ -69,7 +72,7 @@ func BindValue(statementID uint64, bindData []byte) (err error) {
 		}
 	}()
 
-	bind_value(statementID, unsafe.Pointer(&bindData[0]), size(len(bindData)))
+	bind_value(statementID, mkptr(&bindData[0]), size(len(bindData)))
 	return nil
 }
 
@@ -156,7 +159,7 @@ func ColumnCount(statementID uint64) (count uint32, err error) {
 
 //go:wasmimport lunatic::sqlite last_error
 //go:noescape
-func last_error(connID uint64, opaquePtr unsafe.Pointer) uint32
+func last_error(connID uint64, opaquePtr ptr) uint32
 
 // LastError returns the last error message in the provided buffer
 func LastError(connID uint64, buf []byte) (err error) {
@@ -166,13 +169,13 @@ func LastError(connID uint64, buf []byte) (err error) {
 		}
 	}()
 
-	last_error(connID, unsafe.Pointer(&buf[0]))
+	last_error(connID, mkptr(&buf[0]))
 	return nil
 }
 
 //go:wasmimport lunatic::sqlite read_column
 //go:noescape
-func read_column(statementID uint64, colIdx uint32, opaquePtr unsafe.Pointer) uint32
+func read_column(statementID uint64, colIdx uint32, opaquePtr ptr) uint32
 
 // ReadColumn reads a column at the given index.
 func ReadColumn(statementID uint64, colIdx uint32, buf []byte) (n uint32, err error) {
@@ -182,13 +185,13 @@ func ReadColumn(statementID uint64, colIdx uint32, buf []byte) (n uint32, err er
 		}
 	}()
 
-	n = read_column(statementID, colIdx, unsafe.Pointer(&buf[0]))
+	n = read_column(statementID, colIdx, mkptr(&buf[0]))
 	return n, nil
 }
 
 //go:wasmimport lunatic::sqlite read_row
 //go:noescape
-func read_row(statementID uint64, opaquePtr unsafe.Pointer) uint32
+func read_row(statementID uint64, opaquePtr ptr) uint32
 
 // ReadRow reads a row starting at colIdx 0.
 func ReadRow(statementID uint64, buf []byte) (n uint32, err error) {
@@ -198,13 +201,13 @@ func ReadRow(statementID uint64, buf []byte) (n uint32, err error) {
 		}
 	}()
 
-	n = read_row(statementID, unsafe.Pointer(&buf[0]))
+	n = read_row(statementID, mkptr(&buf[0]))
 	return n, nil
 }
 
 //go:wasmimport lunatic::sqlite column_name
 //go:noescape
-func column_name(statementID uint64, columnIdx uint32, opaquePtr unsafe.Pointer) uint32
+func column_name(statementID uint64, columnIdx uint32, opaquePtr ptr) uint32
 
 // ColumnName returns the column name at the columnIdx.
 func ColumnName(statementID uint64, columnIdx uint32, buf []byte) (n uint32, err error) {
@@ -214,13 +217,13 @@ func ColumnName(statementID uint64, columnIdx uint32, buf []byte) (n uint32, err
 		}
 	}()
 
-	n = column_name(statementID, columnIdx, unsafe.Pointer(&buf[0]))
+	n = column_name(statementID, columnIdx, mkptr(&buf[0]))
 	return n, nil
 }
 
 //go:wasmimport lunatic::sqlite column_names
 //go:noescape
-func column_names(statementID uint64, opaquePtr unsafe.Pointer) uint32
+func column_names(statementID uint64, opaquePtr ptr) uint32
 
 // ColumnNames returns the columns names.
 // TODO: Are these a vector of zero-terminated strings?
@@ -231,6 +234,6 @@ func ColumnNames(statementID uint64, buf []byte) (n uint32, err error) {
 		}
 	}()
 
-	n = column_names(statementID, unsafe.Pointer(&buf[0]))
+	n = column_names(statementID, mkptr(&buf[0]))
 	return n, nil
 }

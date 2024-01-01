@@ -8,6 +8,10 @@ import (
 	"unsafe"
 )
 
+type ptr = unsafe.Pointer
+
+func mkptr[T any](v *T) ptr { return unsafe.Pointer(v) }
+
 // StringSize returns the size of the string representation of the error `errorID`.
 //
 //go:wasmimport lunatic::error string_size
@@ -16,13 +20,13 @@ func StringSize(errorID uint64) uint32
 
 //go:wasmimport lunatic::error to_string
 //go:noescape
-func to_string(errorID uint64, errorStrPtr unsafe.Pointer)
+func to_string(errorID uint64, errorStrPtr ptr)
 
 // ToString returns the string representation of the error.
 func ToString(errorID uint64) string {
 	n := StringSize(errorID)
 	buf := make([]byte, 0, n)
-	to_string(errorID, unsafe.Pointer(&buf[0]))
+	to_string(errorID, mkptr(&buf[0]))
 	return string(buf)
 }
 

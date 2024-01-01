@@ -5,7 +5,9 @@ package networking
 import (
 	"errors"
 	"fmt"
+	"log"
 	"math"
+	"net"
 	"unsafe"
 )
 
@@ -13,11 +15,14 @@ var (
 	CallTimedOut = errors.New("call timed out")
 )
 
+type ptr = unsafe.Pointer
 type size = uint32
+
+func mkptr[T any](v *T) ptr { return unsafe.Pointer(v) }
 
 //go:wasmimport lunatic::networking resolve
 //go:noescape
-func resolve(nameStrPtr unsafe.Pointer, nameStrLen size, timeoutDuration uint64, idU64Ptr unsafe.Pointer) uint32
+func resolve(nameStrPtr ptr, nameStrLen size, timeoutDuration uint64, idU64Ptr ptr) uint32
 
 // Resolve performs a DNS resolution. The returned iterator may not actually yield any values
 // depending on the outcome of any resolution performed.
@@ -40,7 +45,9 @@ func Resolve(name string, timeoutMillis *uint64) (id uint64, err error) {
 		td = *timeoutMillis
 	}
 
-	errno := resolve(unsafe.Pointer(&name), size(len(name)), td, unsafe.Pointer(&id))
+	log.Printf("Resolve calling resolve(0x%x,%v,%v,0x%x)", mkptr(&name), size(len(name)), td, mkptr(&id))
+	errno := resolve(mkptr(&name), size(len(name)), td, mkptr(&id))
+	log.Printf("errno=%v, id=%v", errno, id)
 	switch errno {
 	case 0:
 		return id, nil
@@ -71,7 +78,7 @@ func DropDNSIterator(dnsIterID uint64) (err error) {
 
 //go:wasmimport lunatic::networking resolve_next
 //go:noescape
-func resolve_next(dnsIterID uint64, addrTypeU32Ptr, addrU8Ptr, portU16Ptr, flowInfoU32Ptr, scopeIDU32Ptr unsafe.Pointer) uint32
+func resolve_next(dnsIterID uint64, addrTypeU32Ptr, addrU8Ptr, portU16Ptr, flowInfoU32Ptr, scopeIDU32Ptr ptr) uint32
 
 // ResolveNext takes the next socket address from the DNS iterator and returns it.
 // When the iterator is exhausted, (nil, nil) is returned.
@@ -82,16 +89,27 @@ func ResolveNext(dnsIterID uint64) (info *DNSInfo, err error) {
 		}
 	}()
 
-	var addrType uint32
-	dnsInfo := DNSInfo{
+	var (
+		addrType uint32
+		ip       net.IP = make([]byte, 16)
+		port     uint32
+		flowInfo uint32
+		scopeID  uint32
+	)
+
+	dnsInfo := &DNSInfo{
 		IP: make([]byte, 0, 16),
 	}
 
-	n := resolve_next(dnsIterID, unsafe.Pointer(&addrType), unsafe.Pointer(&dnsInfo.IP), unsafe.Pointer(&dnsInfo.Port),
-		unsafe.Pointer(&dnsInfo.FlowInfo), unsafe.Pointer(&dnsInfo.ScopeID))
+	// For some reason, the rust binding uses a U16 pointer here for port whereas
+	// the rest of lunatic uses U32 for ports.
+	log.Printf("ResolveNext calling resolve_next(%v,%v,%v,%v,%v,%v)", dnsIterID, mkptr(&addrType), mkptr(&ip), mkptr(&port), mkptr(&flowInfo), mkptr(&scopeID))
+	n := resolve_next(dnsIterID, mkptr(&dnsInfo.AddrType), mkptr(&dnsInfo.IP), mkptr(&dnsInfo.Port), mkptr(&dnsInfo.FlowInfo), mkptr(&dnsInfo.ScopeID))
+	log.Printf("got n=%v, dnsInfo=%#v", n, dnsInfo)
 	switch n {
 	case 0:
-		return &dnsInfo, nil
+		// dnsInfo.Port = uint32(port)
+		return dnsInfo, nil
 	case 1:
 		return nil, nil
 	default:

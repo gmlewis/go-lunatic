@@ -16,7 +16,7 @@ var (
 
 //go:wasmimport lunatic::networking udp_bind
 //go:noescape
-func udp_bind(addrType uint32, addrU8Ptr unsafe.Pointer, port, flowInfo, scopeID uint32, idU64Ptr unsafe.Pointer) uint32
+func udp_bind(addrType uint32, addrU8Ptr ptr, port, flowInfo, scopeID uint32, idU64Ptr ptr) uint32
 
 // UDPBind creates a new UDP socket which will be bound to the specified address.
 // The returned socket is ready to receive messages.
@@ -34,7 +34,7 @@ func UDPBind(dnsInfo DNSInfo) (id uint64, err error) {
 		}
 	}()
 
-	errno := udp_bind(dnsInfo.AddrType, unsafe.Pointer(&dnsInfo.IP[0]), dnsInfo.Port, dnsInfo.FlowInfo, dnsInfo.ScopeID, unsafe.Pointer(&id))
+	errno := udp_bind(dnsInfo.AddrType, mkptr(&dnsInfo.IP[0]), dnsInfo.Port, dnsInfo.FlowInfo, dnsInfo.ScopeID, mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil
@@ -61,7 +61,7 @@ func DropUDPSocket(udpSocketID uint64) (err error) {
 
 //go:wasmimport lunatic::networking udp_local_addr
 //go:noescape
-func udp_local_addr(udpSocketID uint64, idU64Ptr unsafe.Pointer) uint32
+func udp_local_addr(udpSocketID uint64, idU64Ptr ptr) uint32
 
 // UDPLocalAddr returns the local address that this socket is bound to as
 // a DNS iterator with just one element.
@@ -72,7 +72,7 @@ func UDPLocalAddr(udpSocketID uint64) (id uint64, err error) {
 		}
 	}()
 
-	errno := udp_local_addr(udpSocketID, unsafe.Pointer(&id))
+	errno := udp_local_addr(udpSocketID, mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil
@@ -83,7 +83,7 @@ func UDPLocalAddr(udpSocketID uint64) (id uint64, err error) {
 
 //go:wasmimport lunatic::networking udp_receive
 //go:noescape
-func udp_receive(socketID uint64, bufferPtr unsafe.Pointer, bufferLen size, opaquePtr unsafe.Pointer) uint32
+func udp_receive(socketID uint64, bufferPtr ptr, bufferLen size, opaquePtr ptr) uint32
 
 // UDPReceive reads data from the connected UDP socket and writes it to the given `buf`.
 // This method will fail if the socket is not connected.
@@ -94,7 +94,7 @@ func UDPReceive(socketID uint64, buf []byte) (id uint64, err error) {
 		}
 	}()
 
-	errno := udp_receive(socketID, unsafe.Pointer(&buf[0]), size(cap(buf)), unsafe.Pointer(&id))
+	errno := udp_receive(socketID, mkptr(&buf[0]), size(cap(buf)), mkptr(&id))
 	switch errno {
 	case 0:
 		sh := (*reflect.SliceHeader)(unsafe.Pointer(&buf[0]))
@@ -109,7 +109,7 @@ func UDPReceive(socketID uint64, buf []byte) (id uint64, err error) {
 
 //go:wasmimport lunatic::networking udp_receive_from
 //go:noescape
-func udp_receive_from(socketID uint64, bufferPtr unsafe.Pointer, bufferLen size, opaquePtr unsafe.Pointer, dnsIterPtr unsafe.Pointer) uint32
+func udp_receive_from(socketID uint64, bufferPtr ptr, bufferLen size, opaquePtr, dnsIterPtr ptr) uint32
 
 // UDPReceiveFrom receives data from the UDP socket.
 func UDPReceiveFrom(socketID uint64, buf []byte) (id, dnsIterID uint64, err error) {
@@ -119,7 +119,7 @@ func UDPReceiveFrom(socketID uint64, buf []byte) (id, dnsIterID uint64, err erro
 		}
 	}()
 
-	errno := udp_receive_from(socketID, unsafe.Pointer(&buf[0]), size(cap(buf)), unsafe.Pointer(&id), unsafe.Pointer(&dnsIterID))
+	errno := udp_receive_from(socketID, mkptr(&buf[0]), size(cap(buf)), mkptr(&id), mkptr(&dnsIterID))
 	switch errno {
 	case 0:
 		sh := (*reflect.SliceHeader)(unsafe.Pointer(&buf[0]))
@@ -132,7 +132,7 @@ func UDPReceiveFrom(socketID uint64, buf []byte) (id, dnsIterID uint64, err erro
 
 //go:wasmimport lunatic::networking udp_connect
 //go:noescape
-func udp_connect(addrType uint32, addrU8Ptr unsafe.Pointer, port, flowInfo, scopeID uint32, timeoutDuration uint64, idU64Ptr unsafe.Pointer) uint32
+func udp_connect(addrType uint32, addrU8Ptr ptr, port, flowInfo, scopeID uint32, timeoutDuration uint64, idU64Ptr ptr) uint32
 
 // UDPConnect connects the UDP socket to the provided dnsInfo remote address.
 //
@@ -155,7 +155,7 @@ func UDPConnect(dnsInfo DNSInfo, timeoutMillis *uint64) (id uint64, err error) {
 		td = *timeoutMillis
 	}
 
-	errno := udp_connect(dnsInfo.AddrType, unsafe.Pointer(&dnsInfo.IP[0]), dnsInfo.Port, dnsInfo.FlowInfo, dnsInfo.ScopeID, td, unsafe.Pointer(&id))
+	errno := udp_connect(dnsInfo.AddrType, mkptr(&dnsInfo.IP[0]), dnsInfo.Port, dnsInfo.FlowInfo, dnsInfo.ScopeID, td, mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil
@@ -250,7 +250,7 @@ func GetUDPSocketTTL(udpSocketID uint64) (ttl uint32, err error) {
 
 //go:wasmimport lunatic::networking udp_send_to
 //go:noescape
-func udp_send_to(socketID uint64, bufferPtr unsafe.Pointer, bufferLen size, addrType uint32, addrU8Ptr unsafe.Pointer, port, flowInfo, scopeID uint32, opaquePtr unsafe.Pointer) uint32
+func udp_send_to(socketID uint64, bufferPtr ptr, bufferLen size, addrType uint32, addrU8Ptr ptr, port, flowInfo, scopeID uint32, opaquePtr ptr) uint32
 
 // UDPSendTo sends data on the socket to the given address.
 func UDPSendTo(socketID uint64, buffer []byte, dnsInfo DNSInfo) (id uint64, err error) {
@@ -260,8 +260,8 @@ func UDPSendTo(socketID uint64, buffer []byte, dnsInfo DNSInfo) (id uint64, err 
 		}
 	}()
 
-	errno := udp_send_to(socketID, unsafe.Pointer(&buffer[0]), size(len(buffer)),
-		dnsInfo.AddrType, unsafe.Pointer(&dnsInfo.IP[0]), dnsInfo.Port, dnsInfo.FlowInfo, dnsInfo.ScopeID, unsafe.Pointer(&id))
+	errno := udp_send_to(socketID, mkptr(&buffer[0]), size(len(buffer)),
+		dnsInfo.AddrType, mkptr(&dnsInfo.IP[0]), dnsInfo.Port, dnsInfo.FlowInfo, dnsInfo.ScopeID, mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil
@@ -274,7 +274,7 @@ func UDPSendTo(socketID uint64, buffer []byte, dnsInfo DNSInfo) (id uint64, err 
 
 //go:wasmimport lunatic::networking udp_send
 //go:noescape
-func udp_send(socketID uint64, bufferPtr unsafe.Pointer, bufferLen size, opaquePtr unsafe.Pointer) uint32
+func udp_send(socketID uint64, bufferPtr ptr, bufferLen size, opaquePtr ptr) uint32
 
 // UDPSend sends data on the socket to the remote address to which it is connected.
 //
@@ -287,7 +287,7 @@ func UDPSend(socketID uint64, buffer []byte) (id uint64, err error) {
 		}
 	}()
 
-	errno := udp_send(socketID, unsafe.Pointer(&buffer[0]), size(len(buffer)), unsafe.Pointer(&id))
+	errno := udp_send(socketID, mkptr(&buffer[0]), size(len(buffer)), mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil
@@ -300,7 +300,7 @@ func UDPSend(socketID uint64, buffer []byte) (id uint64, err error) {
 
 //go:wasmimport lunatic::networking udp_peer_addr
 //go:noescape
-func udp_peer_addr(udpStreamID uint64, idU64Ptr unsafe.Pointer) uint32
+func udp_peer_addr(udpStreamID uint64, idU64Ptr ptr) uint32
 
 // UDPPeerAddr returns the remote address this UDP socket is connected to, bound to a DNS
 // iterator with just one element.
@@ -311,7 +311,7 @@ func UDPPeerAddr(udpSocketID uint64) (id uint64, err error) {
 		}
 	}()
 
-	errno := udp_peer_addr(udpSocketID, unsafe.Pointer(&id))
+	errno := udp_peer_addr(udpSocketID, mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil

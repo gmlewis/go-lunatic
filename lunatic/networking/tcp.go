@@ -12,7 +12,7 @@ import (
 
 //go:wasmimport lunatic::networking tcp_bind
 //go:noescape
-func tcp_bind(addrType uint32, addrU8Ptr unsafe.Pointer, port, flowInfo, scopeID uint32, idU64Ptr unsafe.Pointer) uint32
+func tcp_bind(addrType uint32, addrU8Ptr ptr, port, flowInfo, scopeID uint32, idU64Ptr ptr) uint32
 
 // TCPBind creates a new TCP listener which will be bound to the specified address.
 // The returned listener is ready to accept connections.
@@ -30,7 +30,7 @@ func TCPBind(dnsInfo DNSInfo) (id uint64, err error) {
 		}
 	}()
 
-	errno := tcp_bind(dnsInfo.AddrType, unsafe.Pointer(&dnsInfo.IP[0]), dnsInfo.Port, dnsInfo.FlowInfo, dnsInfo.ScopeID, unsafe.Pointer(&id))
+	errno := tcp_bind(dnsInfo.AddrType, mkptr(&dnsInfo.IP[0]), dnsInfo.Port, dnsInfo.FlowInfo, dnsInfo.ScopeID, mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil
@@ -57,7 +57,7 @@ func DropTCPListener(tcpListenerID uint64) (err error) {
 
 //go:wasmimport lunatic::networking tcp_local_addr
 //go:noescape
-func tcp_local_addr(tcpListenerID uint64, idU64Ptr unsafe.Pointer) uint32
+func tcp_local_addr(tcpListenerID uint64, idU64Ptr ptr) uint32
 
 // TCPLocalAddr returns the local address that this listener is bound to as
 // a DNS iterator with just one element.
@@ -68,7 +68,7 @@ func TCPLocalAddr(tcpListenerID uint64) (id uint64, err error) {
 		}
 	}()
 
-	errno := tcp_local_addr(tcpListenerID, unsafe.Pointer(&id))
+	errno := tcp_local_addr(tcpListenerID, mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil
@@ -79,7 +79,7 @@ func TCPLocalAddr(tcpListenerID uint64) (id uint64, err error) {
 
 //go:wasmimport lunatic::networking tcp_accept
 //go:noescape
-func tcp_accept(listenerID uint64, idU64Ptr unsafe.Pointer, socketAddrIDPtr unsafe.Pointer) uint32
+func tcp_accept(listenerID uint64, idU64Ptr ptr, socketAddrIDPtr ptr) uint32
 
 // TCPAccept returns the ID of the newly-created TCP stream and the peer address
 // as a DNS iterator with just one element.
@@ -90,7 +90,7 @@ func TCPAccept(listenerID uint64) (id, dnsIterID uint64, err error) {
 		}
 	}()
 
-	errno := tcp_accept(listenerID, unsafe.Pointer(&id), unsafe.Pointer(&dnsIterID))
+	errno := tcp_accept(listenerID, mkptr(&id), mkptr(&dnsIterID))
 	switch errno {
 	case 0:
 		return id, dnsIterID, nil
@@ -101,7 +101,7 @@ func TCPAccept(listenerID uint64) (id, dnsIterID uint64, err error) {
 
 //go:wasmimport lunatic::networking tcp_connect
 //go:noescape
-func tcp_connect(addrType uint32, addrU8Ptr unsafe.Pointer, port, flowInfo, scopeID uint32, timeoutDuration uint64, idU64Ptr unsafe.Pointer) uint32
+func tcp_connect(addrType uint32, addrU8Ptr ptr, port, flowInfo, scopeID uint32, timeoutDuration uint64, idU64Ptr ptr) uint32
 
 // TCPConnect connects to the provided dnsInfo.
 //
@@ -121,7 +121,7 @@ func TCPConnect(dnsInfo DNSInfo, timeoutMillis *uint64) (id uint64, err error) {
 		td = *timeoutMillis
 	}
 
-	errno := tcp_connect(dnsInfo.AddrType, unsafe.Pointer(&dnsInfo.IP[0]), dnsInfo.Port, dnsInfo.FlowInfo, dnsInfo.ScopeID, td, unsafe.Pointer(&id))
+	errno := tcp_connect(dnsInfo.AddrType, mkptr(&dnsInfo.IP[0]), dnsInfo.Port, dnsInfo.FlowInfo, dnsInfo.ScopeID, td, mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil
@@ -166,7 +166,7 @@ func CloneTCPStream(tcpStreamID uint64) (id uint64, err error) {
 
 //go:wasmimport lunatic::networking tcp_write_vectored
 //go:noescape
-func tcp_write_vectored(streamID uint64, ciovecArrayPtr unsafe.Pointer, ciovecArrayLen size, opaquePtr unsafe.Pointer) uint32
+func tcp_write_vectored(streamID uint64, ciovecArrayPtr ptr, ciovecArrayLen size, opaquePtr ptr) uint32
 
 // TCPWriteVectored gathers data from the vector buffers and writes them to the stream.
 func TCPWriteVectored(streamID uint64, buf []byte) (id uint64, err error) {
@@ -176,7 +176,7 @@ func TCPWriteVectored(streamID uint64, buf []byte) (id uint64, err error) {
 		}
 	}()
 
-	errno := tcp_write_vectored(streamID, unsafe.Pointer(&buf[0]), size(len(buf)), unsafe.Pointer(&id))
+	errno := tcp_write_vectored(streamID, mkptr(&buf[0]), size(len(buf)), mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil
@@ -189,7 +189,7 @@ func TCPWriteVectored(streamID uint64, buf []byte) (id uint64, err error) {
 
 //go:wasmimport lunatic::networking tcp_read
 //go:noescape
-func tcp_read(streamID uint64, bufferPtr unsafe.Pointer, bufferLen size, opaquePtr unsafe.Pointer) uint32
+func tcp_read(streamID uint64, bufferPtr ptr, bufferLen size, opaquePtr ptr) uint32
 
 // TCPRead reads data from the TCP stream and writes it into `buf`.
 //
@@ -201,7 +201,7 @@ func TCPRead(streamID uint64, buf []byte) (id uint64, err error) {
 		}
 	}()
 
-	errno := tcp_read(streamID, unsafe.Pointer(&buf[0]), size(cap(buf)), unsafe.Pointer(&id))
+	errno := tcp_read(streamID, mkptr(&buf[0]), size(cap(buf)), mkptr(&id))
 	switch errno {
 	case 0:
 		sh := (*reflect.SliceHeader)(unsafe.Pointer(&buf[0]))
@@ -314,7 +314,7 @@ func GetPeekTimeout(streamID uint64) (timeoutMillis uint64, err error) {
 
 //go:wasmimport lunatic::networking tcp_flush
 //go:noescape
-func tcp_flush(streamID uint64, errorIDPtr unsafe.Pointer) uint32
+func tcp_flush(streamID uint64, errorIDPtr ptr) uint32
 
 // TCPFlush flushes this output stream, ensuring that all buffered contents
 // reach their destination.
@@ -325,7 +325,7 @@ func TCPFlush(streamID uint64) (id uint64, err error) {
 		}
 	}()
 
-	errno := tcp_flush(streamID, unsafe.Pointer(&id))
+	errno := tcp_flush(streamID, mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil
@@ -338,7 +338,7 @@ func TCPFlush(streamID uint64) (id uint64, err error) {
 
 //go:wasmimport lunatic::networking tcp_peer_addr
 //go:noescape
-func tcp_peer_addr(tcpStreamID uint64, idU64Ptr unsafe.Pointer) uint32
+func tcp_peer_addr(tcpStreamID uint64, idU64Ptr ptr) uint32
 
 // TCPPeerAddr returns the remote address this TCP socket is connected to, bound to a DNS
 // iterator with just one element.
@@ -349,7 +349,7 @@ func TCPPeerAddr(tcpStreamID uint64) (id uint64, err error) {
 		}
 	}()
 
-	errno := tcp_peer_addr(tcpStreamID, unsafe.Pointer(&id))
+	errno := tcp_peer_addr(tcpStreamID, mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil

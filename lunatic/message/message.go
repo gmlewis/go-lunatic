@@ -85,7 +85,10 @@ var (
 	ProcessDied  = errors.New("process died")
 )
 
+type ptr = unsafe.Pointer
 type size = uint32
+
+func mkptr[T any](v *T) ptr { return unsafe.Pointer(v) }
 
 // CreateData creates a new data message.
 //
@@ -98,7 +101,7 @@ func CreateData(tag int64, bufferCapacity uint64)
 
 //go:wasmimport lunatic::message write_data
 //go:noescape
-func write_data(dataPtr unsafe.Pointer, dataLen size) uint32
+func write_data(dataPtr ptr, dataLen size) uint32
 
 // WriteData writes some data into the message buffer and returns how much
 // data is written in bytes.
@@ -113,13 +116,13 @@ func WriteData(data []byte) (n uint32, err error) {
 		}
 	}()
 
-	n = write_data(unsafe.Pointer(&data[0]), size(len(data)))
+	n = write_data(mkptr(&data[0]), size(len(data)))
 	return n, nil
 }
 
 //go:wasmimport lunatic::message read_data
 //go:noescape
-func read_data(dataPtr unsafe.Pointer, dataLen size) uint32
+func read_data(dataPtr ptr, dataLen size) uint32
 
 // ReadData reads some data from the message buffer and returns
 // how many bytes were read.
@@ -134,7 +137,7 @@ func ReadData(buf []byte) (n uint32, err error) {
 		}
 	}()
 
-	n = read_data(unsafe.Pointer(&buf[0]), size(len(buf)))
+	n = read_data(mkptr(&buf[0]), size(len(buf)))
 	return n, nil
 }
 
@@ -361,7 +364,7 @@ func SendReceiveSkipSearch(processID uint64, waitOnTag int64, timeoutMillis *uin
 
 //go:wasmimport lunatic::message receive
 //go:noescape
-func receive(tagPtr unsafe.Pointer, tagLen size, timeoutDuration uint64) uint32
+func receive(tagPtr ptr, tagLen size, timeoutDuration uint64) uint32
 
 // Receive takes the next message out of the queue or blocks until the next message is
 // received if the queue is empty.
@@ -395,7 +398,7 @@ func Receive(tags []int64, timeoutMillis *uint64) (err error) {
 		td = *timeoutMillis
 	}
 
-	errno := receive(unsafe.Pointer(&tags[0]), size(uintptr(len(tags))*unsafe.Sizeof(int64(0))), td)
+	errno := receive(mkptr(&tags[0]), size(uintptr(len(tags))*unsafe.Sizeof(int64(0))), td)
 	switch errno {
 	case 0:
 		return nil

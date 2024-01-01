@@ -1,4 +1,4 @@
-// -*- compile-command: "./build-tinygo.sh"; -*-
+// -*- compile-command: "./build-go.sh && ./run.sh"; -*-
 
 // version is a simple example of creating a WASM module that can
 // be run by lunatic. See: https://lunatic.solutions/
