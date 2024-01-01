@@ -45,7 +45,7 @@ func GetNodes(ids []uint64) (err error) {
 		}
 	}()
 
-	n = get_nodes(unsafe.Pointer(&ids[0]), size(len(ids)))
+	n = get_nodes(unsafe.Pointer(&ids[0]), size(uintptr(len(ids))*unsafe.Sizeof(uint64(0))))
 	sh := (*reflect.SliceHeader)(unsafe.Pointer(&ids))
 	sh.Len = int(n) // override the slice's length to the returned results.
 	return nil
@@ -203,18 +203,20 @@ func send_receive_skip_search(nodeID, processID uint64, waitOnTag int64, timeout
 // SendReceiveSkipSearch sends the message to a process on a node with ID `nodeID` and waits for a reply,
 // but doesn't look through existing messages in the mailbox queue while waiting.
 // This is an optimization that only makes sense with tagged messages.
-// In a request/reply scenario we can tag the request message with a unique tag and just wait on it specifically.
+// In a request/reply scenario we can tag the request message with a unique tag
+// and just wait on it specifically.
 //
-// This operation needs to be an atomic host function. If we jumped back into the guest we could
-// miss out on the incoming message before `receive` is called.
+// This operation needs to be an atomic host function. If we jumped back into the guest,
+// we could miss out on the incoming message before `Receive` is called.
 //
-// If timeoutMillis is not nil, the function will return on timeout expiration with the error CallTimedOut.
+// If timeoutMillis is not nil, the function will return on timeout expiration with
+// the error `CallTimedOut`.
 //
 // Returns:
 // * nil if message arrived.
 // * ProcessDoesNotExist if the process does not exist.
 // * NodeDoesNotExist if the node does not exist.
-// * CallTimedOut.
+// * CallTimedOut if the call timed out.
 //
 // Errors:
 // * If called with wrong data in the scratch area.
