@@ -10,7 +10,7 @@ import (
 	"github.com/gmlewis/go-lunatic/lunatic/process"
 )
 
-//go:wasm-module hello-lunatic
+//go:wasm-module sleep
 func main() {
 	fmt.Println("Counting...")
 

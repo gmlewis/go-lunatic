@@ -19,7 +19,7 @@ type size = uint32
 //go:noescape
 func resolve(nameStrPtr unsafe.Pointer, nameStrLen size, timeoutDuration uint64, idU64Ptr unsafe.Pointer) uint32
 
-// Resolve performs a DNS resolution. The returned iterator may not actually yield andy values
+// Resolve performs a DNS resolution. The returned iterator may not actually yield any values
 // depending on the outcome of any resolution performed.
 //
 // If `timeoutMillis` is not nil, the function will return on timeout expiration with

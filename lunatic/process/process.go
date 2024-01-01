@@ -322,6 +322,20 @@ func ConfigSetCanSpawnProcesses(configID uint64, ok bool) (err error) {
 func spawn(link, configID, moduleID int64, funcStrPtr unsafe.Pointer, funcStrLen size,
 	paramsPtr unsafe.Pointer, paramsLen size, idPtr unsafe.Pointer) uint32
 
+// SpawnFunc is a helper to spawn a new function in Go.
+func SpawnFunc(fn func()) (id uint32, err error) {
+	funcName := "__lunatic_bootstrap"
+
+	id, err = Spawn(0, -1, -1, funcName, nil)
+	if err != nil {
+		return id, err
+	}
+
+	// TODO: complete this.
+	// message.Send()
+	return id, nil
+}
+
 // Spawn spawns a new process using the passed-in function inside a module as the entry point.
 //
 // If `link` is not 0, it will link the child and parent processes. The value of `link` will
