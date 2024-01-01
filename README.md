@@ -10,7 +10,7 @@ for use by [lunatic].
 | Name             |         Go         |       TinyGo       | Notes |
 | ---------------- | :----------------: | :----------------: | ----- |
 | [hello]          | :heavy_check_mark: | :heavy_check_mark: |       |
-| [net]            |       fails        |        n/a         |       |
+| [net]            | :heavy_check_mark: |        n/a         |       |
 | [simple-process] |       fails        |       fails        |       |
 | [sleep]          | :heavy_check_mark: | :heavy_check_mark: |       |
 | [spawn]          |       fails        |       fails        |       |

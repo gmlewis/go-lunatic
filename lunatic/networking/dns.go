@@ -5,9 +5,7 @@ package networking
 import (
 	"errors"
 	"fmt"
-	"log"
 	"math"
-	"net"
 	"unsafe"
 )
 
@@ -44,10 +42,9 @@ func Resolve(name string, timeoutMillis *uint64) (id uint64, err error) {
 	if timeoutMillis != nil {
 		td = *timeoutMillis
 	}
+	nameBytes := []byte(name)
 
-	log.Printf("Resolve calling resolve(0x%x,%v,%v,0x%x)", mkptr(&name), size(len(name)), td, mkptr(&id))
-	errno := resolve(mkptr(&name), size(len(name)), td, mkptr(&id))
-	log.Printf("errno=%v, id=%v", errno, id)
+	errno := resolve(mkptr(&nameBytes[0]), size(len(name)), td, mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil
@@ -89,26 +86,13 @@ func ResolveNext(dnsIterID uint64) (info *DNSInfo, err error) {
 		}
 	}()
 
-	var (
-		addrType uint32
-		ip       net.IP = make([]byte, 16)
-		port     uint32
-		flowInfo uint32
-		scopeID  uint32
-	)
-
 	dnsInfo := &DNSInfo{
-		IP: make([]byte, 0, 16),
+		IP: make([]byte, 16),
 	}
 
-	// For some reason, the rust binding uses a U16 pointer here for port whereas
-	// the rest of lunatic uses U32 for ports.
-	log.Printf("ResolveNext calling resolve_next(%v,%v,%v,%v,%v,%v)", dnsIterID, mkptr(&addrType), mkptr(&ip), mkptr(&port), mkptr(&flowInfo), mkptr(&scopeID))
-	n := resolve_next(dnsIterID, mkptr(&dnsInfo.AddrType), mkptr(&dnsInfo.IP), mkptr(&dnsInfo.Port), mkptr(&dnsInfo.FlowInfo), mkptr(&dnsInfo.ScopeID))
-	log.Printf("got n=%v, dnsInfo=%#v", n, dnsInfo)
+	n := resolve_next(dnsIterID, mkptr(&dnsInfo.AddrType), mkptr(&dnsInfo.IP[0]), mkptr(&dnsInfo.Port), mkptr(&dnsInfo.FlowInfo), mkptr(&dnsInfo.ScopeID))
 	switch n {
 	case 0:
-		// dnsInfo.Port = uint32(port)
 		return dnsInfo, nil
 	case 1:
 		return nil, nil
