@@ -6,6 +6,7 @@ package process
 import (
 	"errors"
 	"fmt"
+	"log"
 	"unsafe"
 )
 
@@ -35,7 +36,8 @@ func compile_module(moduleDataPtr ptr, moduleDataLen size, idPtr ptr) int32
 // * PermissionDenied if the process doesn't have permission to compile modules.
 // * a wrapped wrror ID
 func CompileModule(moduleData string) (id uint32, err error) {
-	errno := compile_module(mkptr(&moduleData), size(len(moduleData)), mkptr(&id))
+	moduleDataBytes := []byte(moduleData)
+	errno := compile_module(mkptr(&moduleDataBytes[0]), size(len(moduleData)), mkptr(&id))
 	switch errno {
 	case 0:
 		return id, nil
@@ -323,20 +325,6 @@ func ConfigSetCanSpawnProcesses(configID uint64, ok bool) (err error) {
 func spawn(link, configID, moduleID int64, funcStrPtr ptr, funcStrLen size,
 	paramsPtr ptr, paramsLen size, idPtr ptr) uint32
 
-// SpawnFunc is a helper to spawn a new function in Go.
-func SpawnFunc(fn func()) (id uint32, err error) {
-	funcName := "__lunatic_bootstrap"
-
-	id, err = Spawn(0, -1, -1, funcName, nil)
-	if err != nil {
-		return id, err
-	}
-
-	// TODO: complete this.
-	// message.Send()
-	return id, nil
-}
-
 // Spawn spawns a new process using the passed-in function inside a module as the entry point.
 //
 // If `link` is not 0, it will link the child and parent processes. The value of `link` will
@@ -366,13 +354,18 @@ func Spawn(link, configID, moduleID int64, funcStr string, params []any) (id uin
 
 	paramsBytes := make([]byte, 18*len(params))
 	copyBytes := func(index int, v uint64) {
+		log.Printf("copyBytes(index=%v, v=%v)", index, v)
 		src := unsafe.Slice((*byte)(unsafe.Pointer(&v)), 17)
+		log.Printf("copyBytes: src=%T=%v", src, src)
 		for i := 0; i < 17; i++ {
+			log.Printf("copyBytes: paramsBytes[%v]=src[%v]", index*18+i, i)
 			paramsBytes[index*18+i] = src[i]
 		}
+		log.Printf("leaving copyBytes(index=%v, v=%v)", index, v)
 	}
 
 	for i, param := range params {
+		log.Printf("Spawn: i=%v, param=%T=%v", i, param, param)
 		i32func := func(v uint64) {
 			paramsBytes[i*18] = 0x7F // i32
 			copyBytes(i, v)
@@ -411,8 +404,15 @@ func Spawn(link, configID, moduleID int64, funcStr string, params []any) (id uin
 		}
 	}
 
-	errno := spawn(link, configID, moduleID, mkptr(&funcStr), size(len(funcStr)),
-		mkptr(&paramsBytes[0]), size(len(paramsBytes)), mkptr(&id))
+	funcStrBytes := []byte(funcStr)
+	var paramsBytesPtr ptr
+	if len(paramsBytes) > 0 {
+		paramsBytesPtr = mkptr(&paramsBytes[0])
+	}
+
+	log.Printf("Spawn calling spawn(%v,%v,%v,%v,%v,%v,%v,%v)", link, configID, moduleID, mkptr(&funcStrBytes[0]), size(len(funcStr)), paramsBytesPtr, size(len(paramsBytes)), mkptr(&id))
+	errno := spawn(link, configID, moduleID, mkptr(&funcStrBytes[0]), size(len(funcStr)), paramsBytesPtr, size(len(paramsBytes)), mkptr(&id))
+	log.Printf("spawn errno=%v, id=%v", errno, id)
 	switch errno {
 	case 0:
 		return id, nil

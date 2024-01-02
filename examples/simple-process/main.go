@@ -7,7 +7,7 @@ package main
 import (
 	"log"
 
-	"github.com/gmlewis/go-lunatic/lunatic/process"
+	"github.com/gmlewis/go-lunatic/lunatic"
 )
 
 //go:wasm-module simple-process
@@ -15,9 +15,14 @@ func main() {
 	log.Printf("[main process] Hello from the main process!")
 	log.Printf("[main process] Spawning a child...")
 
-	if _, err := process.SpawnFunc(func() {
+	_, err := lunatic.SpawnFunc(func() {
 		log.Printf("[subprocess] 👋 from spawned process!")
-	}); err != nil {
+	})
+	must(err)
+}
+
+func must(err error) {
+	if err != nil {
 		log.Fatal(err)
 	}
 }
