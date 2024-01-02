@@ -12,6 +12,7 @@ for use by [lunatic].
 | [hello]          | :heavy_check_mark: | :heavy_check_mark: |       |
 | [metrics]        | :heavy_check_mark: | :heavy_check_mark: |       |
 | [net]            | :heavy_check_mark: |        n/a         |       |
+| [print-env]      | :heavy_check_mark: | :heavy_check_mark: |       |
 | [simple-process] |       fails        |       fails        |       |
 | [sleep]          | :heavy_check_mark: | :heavy_check_mark: |       |
 | [spawn]          |       fails        |       fails        |       |
@@ -20,6 +21,7 @@ for use by [lunatic].
 [hello]: ./examples/hello/
 [metrics]: ./examples/metrics/
 [net]: ./examples/net/
+[print-env]: ./examples/print-env/
 [simple-process]: ./examples/simple-process/
 [sleep]: ./examples/sleep/
 [spawn]: ./examples/spawn/
