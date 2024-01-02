@@ -8,17 +8,20 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"log"
 	"os"
 	"sort"
 	"strings"
+
+	"github.com/gmlewis/go-lunatic/lunatic"
 )
 
 //go:wasm-module print-env
 func main() {
-	flag.Parse()
-	fmt.Printf("#flags=%v, args: %+v\n", flag.NFlag(), flag.Args())
+	args, err := lunatic.Args()
+	must(err)
+	fmt.Printf("args: %+v\n", args)
 
 	envVars := os.Environ()
 	sort.Strings(envVars)
@@ -30,5 +33,11 @@ func main() {
 		}
 		key, value := parts[0], parts[1]
 		fmt.Printf("%v: %v\n", key, value)
+	}
+}
+
+func must(err error) {
+	if err != nil {
+		log.Fatal(err)
 	}
 }

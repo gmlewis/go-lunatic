@@ -22,7 +22,7 @@ import (
 //go:wasm-module metrics
 func main() {
 	metrics.Counter("lunatic::metrics_example::counter", 42)
-	for i := 0; i < 6000; i++ {
+	for i := 0; i < 60; i++ {
 		metrics.IncrementCounter("lunatic::metrics_example::counter")
 		if i%50 < 25 {
 			metrics.IncrementGauge("lunatic::metrics_example::gauge", 1.0)
