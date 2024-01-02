@@ -10,6 +10,7 @@ for use by [lunatic].
 | Name             |         Go         |       TinyGo       | Notes |
 | ---------------- | :----------------: | :----------------: | ----- |
 | [hello]          | :heavy_check_mark: | :heavy_check_mark: |       |
+| [metrics]        | :heavy_check_mark: | :heavy_check_mark: |       |
 | [net]            | :heavy_check_mark: |        n/a         |       |
 | [simple-process] |       fails        |       fails        |       |
 | [sleep]          | :heavy_check_mark: | :heavy_check_mark: |       |
@@ -17,6 +18,7 @@ for use by [lunatic].
 | [version]        | :heavy_check_mark: | :heavy_check_mark: |       |
 
 [hello]: ./examples/hello/
+[metrics]: ./examples/metrics/
 [net]: ./examples/net/
 [simple-process]: ./examples/simple-process/
 [sleep]: ./examples/sleep/

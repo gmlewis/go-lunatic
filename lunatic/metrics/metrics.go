@@ -25,7 +25,8 @@ func Counter(name string, value uint64) (err error) {
 		}
 	}()
 
-	counter(mkptr(&name), size(len(name)), value)
+	nameBytes := []byte(name)
+	counter(mkptr(&nameBytes[0]), size(len(name)), value)
 	return nil
 }
 
@@ -41,7 +42,8 @@ func IncrementCounter(name string) (err error) {
 		}
 	}()
 
-	increment_counter(mkptr(&name), size(len(name)))
+	nameBytes := []byte(name)
+	increment_counter(mkptr(&nameBytes[0]), size(len(name)))
 	return nil
 }
 
@@ -57,7 +59,8 @@ func Gauge(name string, value float64) (err error) {
 		}
 	}()
 
-	gauge(mkptr(&name), size(len(name)), value)
+	nameBytes := []byte(name)
+	gauge(mkptr(&nameBytes[0]), size(len(name)), value)
 	return nil
 }
 
@@ -73,7 +76,8 @@ func IncrementGauge(name string, value float64) (err error) {
 		}
 	}()
 
-	increment_gauge(mkptr(&name), size(len(name)), value)
+	nameBytes := []byte(name)
+	increment_gauge(mkptr(&nameBytes[0]), size(len(name)), value)
 	return nil
 }
 
@@ -89,7 +93,8 @@ func DecrementGauge(name string, value float64) (err error) {
 		}
 	}()
 
-	decrement_gauge(mkptr(&name), size(len(name)), value)
+	nameBytes := []byte(name)
+	decrement_gauge(mkptr(&nameBytes[0]), size(len(name)), value)
 	return nil
 }
 
@@ -105,6 +110,7 @@ func Histogram(name string, value float64) (err error) {
 		}
 	}()
 
-	histogram(mkptr(&name), size(len(name)), value)
+	nameBytes := []byte(name)
+	histogram(mkptr(&nameBytes[0]), size(len(name)), value)
 	return nil
 }
