@@ -11,7 +11,7 @@ for use by [lunatic].
 | ---------------- | :----------------: | :----------------: | ----- |
 | [hello]          | :heavy_check_mark: | :heavy_check_mark: |       |
 | [metrics]        | :heavy_check_mark: | :heavy_check_mark: |       |
-| [monitor]        |       fails        |       fails        |       |
+| [monitor]        |        n/a         |       fails        |       |
 | [net]            | :heavy_check_mark: |        n/a         |       |
 | [print-env]      | :heavy_check_mark: | :heavy_check_mark: |       |
 | [simple-process] |       fails        |       fails        |       |
